@@ -2,7 +2,7 @@ from socket import *
 import time
 import sys
 
-serverIp = "localhost"
+serverIp = ""
 serverPort = 3405
 
 # create client socket
@@ -50,11 +50,11 @@ def calculateData(rrt):
     averageRRTs = RRTtotal / totalNumRRT
     packetLossRate = ((currentNumPing - totalNumRRT) * 100)/ currentNumPing
 
-    print(f'\nThe minimum RRT:  {minRRT}')
-    print(f'The maximum RRT:  {maxRRT}')
-    print(f'The total number of RRTs:  {totalNumRRT}')
-    print(f'ThePacket loss rate: {packetLossRate}%')
-    print(f'The average RRTs:   {averageRRTs}\n')
+    # print(f'\nThe minimum RRT:  {minRRT}')
+    # print(f'The maximum RRT:  {maxRRT}')
+    # print(f'The total number of RRTs:  {totalNumRRT}')
+    # print(f'ThePacket loss rate: {packetLossRate}%')
+    # print(f'The average RRTs:   {averageRRTs}\n')
     return
 
 # loop through until counter reaches 180 seconds which means 3 minutes
@@ -72,7 +72,7 @@ while( passedTime < 180 ):
         response, addr = clientSocket.recvfrom(1024)
         endTime = time.time()
         # got response from server and calculated RRT
-        print(f'echo, {sequenceNum}, {time.strftime("%H:%M:%S", time.localtime())}')
+        print(f'ping, {sequenceNum}, {time.strftime("%H:%M:%S", time.localtime())}')
         if (sequenceNum == int(response.decode().split(", ")[1])):
             RRT = endTime - startTime
             calculateData(RRT)
@@ -80,7 +80,7 @@ while( passedTime < 180 ):
     except timeout:
         # time out occured so packet lost
         flag = True
-        print(f'Client ping timed out.\n')
+        print(f'Client ping timed out.')
 
     if (flag):
         time.sleep(2)
@@ -90,4 +90,11 @@ while( passedTime < 180 ):
     flag = False
 
 clientSocket.close()
+
+print(f'\nThe minimum RRT:  {minRRT}')
+print(f'The maximum RRT:  {maxRRT}')
+print(f'The total number of RRTs:  {totalNumRRT}')
+print(f'ThePacket loss rate: {packetLossRate}%')
+print(f'The average RRTs:   {averageRRTs}\n')
+
 sys.exit()

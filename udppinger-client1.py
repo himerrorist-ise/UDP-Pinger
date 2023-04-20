@@ -2,7 +2,7 @@ from socket import *
 import time
 import sys
 
-serverIp = "localhost"
+serverIp = ""
 serverPort = 3405
 
 # create client socket
@@ -38,7 +38,7 @@ while( passedTime < 180 ):
         if (sequenceNum == response.decode().split(",")[1]):
             RRT = endTime - startTime
         # got response from server and calculated RRT
-        print(f'echo, {sequenceNum}, {time.strftime("%H:%M,%S", time.localtime())}')
+        print(f'ping, {sequenceNum}, {time.strftime("%H:%M:%S", time.localtime())}')
         sequenceNum += 1
     except timeout:
         # time out occured so packet lost

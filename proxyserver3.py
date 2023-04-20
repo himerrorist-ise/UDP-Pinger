@@ -50,13 +50,12 @@ def threadFunc(conn):
     _thread.exit()
 
 def threadUDP():
-    serverIp = ""
-    serverPort = 3407
+
     # create client socket
-    clientSocket = socket(AF_INET, SOCK_DGRAM)
+    clientSocketUDP = socket(AF_INET, SOCK_DGRAM)
 
     # set timeout to socket to check if the packet is timedout or not
-    clientSocket.settimeout(1)
+    clientSocketUDP.settimeout(1)
 
     # initilize sequence number
     sequenceNum = 1
@@ -70,59 +69,53 @@ def threadUDP():
     flag = False
 
     # data variables
-    minRRT = 100000
-    maxRRT = 0
-    RRTtotal = 0
-    totalNumRRT = 0
-    packetLossRate = 0
-    averageRRTs = 0
-    totalNumPing = 60 # because we ping every 3 seconds until it is 180 seconds
-    currentNumPing = 0
+    data = {
+        "minRRT": 100000,
+        "maxRRT": 0,
+        "RRTtotal": 0,
+        "totalNumRRT": 0,
+        "packetLossRate": 0,
+        "averageRRTs": 0,
+        "totalNumPing": 60, # because we ping every 3 seconds until it is 180 seconds
+        "currentNumPing": 0,
+    }
 
     # calculate needed data
-    def calculateData(rrt):
-        global minRRT
-        global maxRRT
-        global RRTtotal
-        global totalNumRRT
-        global averageRRTs
-        global totalNumPing
-        global currentNumPing
-        global packetLossRate
+    def calculateData(rrt, data):
 
-        if (RRT < minRRT): minRRT = RRT
-        if (RRT > maxRRT): maxRRT = RRT
-        totalNumRRT+=1
-        RRTtotal += RRT
-        averageRRTs = RRTtotal / totalNumRRT
-        packetLossRate = ((currentNumPing - totalNumRRT) * 100)/ currentNumPing
+        if (rrt < data["minRRT"]): data["minRRT"] = rrt
+        if (rrt > data["maxRRT"]): data["maxRRT"] = rrt
+        data["totalNumRRT"]+=1
+        data["RRTtotal"] += rrt
+        data["averageRRTs"] = data["RRTtotal"] / data["totalNumRRT"]
+        data["packetLossRate"] = ((data["currentNumPing"] - data["totalNumRRT"]) * 100)/ data["currentNumPing"]
 
-        print(f'\nThe minimum RRT:  {minRRT}')
-        print(f'The maximum RRT:  {maxRRT}')
-        print(f'The total number of RRTs:  {totalNumRRT}')
-        print(f'ThePacket loss rate: {packetLossRate}%')
-        print(f'The average RRTs:   {averageRRTs}\n')
+        # print(f'\nThe minimum RRT:  {data["minRRT"]}')
+        # print(f'The maximum RRT:  {data["maxRRT"]}')
+        # print(f'The total number of RRTs:  {data["totalNumRRT"]}')
+        # print(f'ThePacket loss rate: {data["packetLossRate"]}%')
+        # print(f'The average RRTs:   {data["averageRRTs"]}\n')
         return
 
     # loop through until counter reaches 180 seconds which means 3 minutes
     # so needed to terminate program
     while( passedTime < 180 ):
         # start time to calculate RRT
-        currentNumPing += 1
+        data["currentNumPing"] += 1
         startTime = time.time()
         try:
             # send ping message to the server
-            clientSocket.sendto(
+            clientSocketUDP.sendto(
                 f'ping, {sequenceNum}, {time.strftime("%H:%M:%S", time.localtime())}'.encode(),
-                (serverIp, serverPort)
+                ('', 3407)
             )
-            response, addr = clientSocket.recvfrom(1024)
+            response, addr = clientSocketUDP.recvfrom(1024)
             endTime = time.time()
             # got response from server and calculated RRT
-            print(f'echo, {sequenceNum}, {time.strftime("%H:%M:%S", time.localtime())}')
+            print(f'ping, {sequenceNum}, {time.strftime("%H:%M:%S", time.localtime())}')
             if (sequenceNum == int(response.decode().split(", ")[1])):
                 RRT = endTime - startTime
-                calculateData(RRT)
+                calculateData(RRT, data)
             sequenceNum += 1
         except timeout:
             # time out occured so packet lost
@@ -136,7 +129,12 @@ def threadUDP():
         passedTime += 3
         flag = False
 
-    clientSocket.close()
+    clientSocketUDP.close()
+    print(f'\nThe minimum RRT:  {data["minRRT"]}')
+    print(f'The maximum RRT:  {data["maxRRT"]}')
+    print(f'The total number of RRTs:  {data["totalNumRRT"]}')
+    print(f'ThePacket loss rate: {data["packetLossRate"]}%')
+    print(f'The average RRTs:   {data["averageRRTs"]}\n')
     _thread.exit()
 
 # main

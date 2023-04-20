@@ -9,7 +9,15 @@ port = 3405
 
 serverSocket = socket(AF_INET, SOCK_STREAM)
 
-serverSocket.bind(("149.125.119.36", port))
+serverSocket.bind(("", port))
+
+# Prepare a sever socket
+# Create a UDP socket
+# Notice the use of SOCK_DGRAM for UDP packets
+serverSocketUDP = socket(AF_INET, SOCK_DGRAM)
+# Assign IP address and port number to socket
+serverSocketUDP.bind(('', 3407))
+serverSocketUDP.settimeout(30)
 
 flag = False
 
@@ -91,31 +99,29 @@ def threadedClient(conn, addr):
   _thread.exit()
 
 
-def threadUDP():
-    # Prepare a sever socket
-    # Create a UDP socket
-    # Notice the use of SOCK_DGRAM for UDP packets
-    serverSocketUDP = socket(AF_INET, SOCK_DGRAM)
-    print("in server udp thread")
-    # Assign IP address and port number to socket
-    serverSocketUDP.bind(('', 3407))
-
+def threadUDP(conn):
     while True:
-        # Generate random number in the range of 0 to 10
-        rand = random.randint(0, 10)
+        try:
+          # Generate random number in the range of 0 to 10
+          rand = random.randint(0, 10)
 
-        # Receive the client packet along with the address it is coming from
-        message, address = serverSocketUDP.recvfrom(1024)
+          # Receive the client packet along with the address it is coming from
+          message, address = conn.recvfrom(1024)
 
-        # If rand is less is than 4, we consider the packet lost and do not respond
-        if rand < 4:
-            continue
+          # If rand is less is than 4, we consider the packet lost and do not respond
+          if rand < 4:
+              continue
 
-        # Otherwise, prepare the server response
+          # Otherwise, prepare the server response
 
-        # The server responds
-        serverSocketUDP.sendto(message, address)
-    return
+          # The server responds
+          conn.sendto(message, address)
+          print(f'echo, {message.decode().split(", ")[1]}, {time.strftime("%H:%M:%S", time.localtime())}')
+        except timeout:
+          print(f'Server echo timed out.\n')
+          break
+    
+    _thread.exit()
 
 
 # main
@@ -130,11 +136,13 @@ try:
     _thread.start_new_thread(threadedClient, (client, address))
     # print(f'number of thread: {_thread._count()}')
 
-    _thread.start_new_thread(threadUDP, ())
+    _thread.start_new_thread(threadUDP, (serverSocketUDP, ))
     
     
 except KeyboardInterrupt:
     serverSocket.close()
+    serverSocketUDP.close()
     sys.exit()
 
 serverSocket.close()
+serverSocketUDP.close()
