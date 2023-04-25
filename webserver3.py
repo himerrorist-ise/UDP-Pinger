@@ -6,17 +6,17 @@ import time
 import random
 
 port = 3405
-
+serverIP = ""
 serverSocket = socket(AF_INET, SOCK_STREAM)
 
-serverSocket.bind(("", port))
+serverSocket.bind((serverIP, port))
 
 # Prepare a sever socket
 # Create a UDP socket
 # Notice the use of SOCK_DGRAM for UDP packets
 serverSocketUDP = socket(AF_INET, SOCK_DGRAM)
 # Assign IP address and port number to socket
-serverSocketUDP.bind(('', 3407))
+serverSocketUDP.bind((serverIP, 3407))
 serverSocketUDP.settimeout(30)
 
 flag = False

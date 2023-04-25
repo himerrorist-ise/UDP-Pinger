@@ -4,8 +4,10 @@ import _thread
 import time
 
 port = 3406
+proxyIP = ""
+webserverIP = ""
 proxySocket = socket(AF_INET, SOCK_STREAM)
-proxySocket.bind(("", port))
+proxySocket.bind((proxyIP, port))
 
 flag = False
 threadId = 0
@@ -29,7 +31,7 @@ def threadFunc(conn):
             # time.sleep(4)
             # print(f'proxy-cache, client, {_thread.get_ident()}, {time.strftime("%H:%M:%S", time.localtime())}\n')
         else:
-            webserverSocket.connect(("", 3405))
+            webserverSocket.connect((webserverIP, 3405))
             webserverSocket.sendall(data.encode())
             response = webserverSocket.recv(2048).decode()
             # time.sleep(5)
@@ -107,7 +109,7 @@ def threadUDP():
             # send ping message to the server
             clientSocketUDP.sendto(
                 f'ping, {sequenceNum}, {time.strftime("%H:%M:%S", time.localtime())}'.encode(),
-                ('', 3407)
+                (webserverIP, 3407)
             )
             response, addr = clientSocketUDP.recvfrom(1024)
             endTime = time.time()
